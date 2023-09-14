@@ -54,6 +54,10 @@ dependencies {
     implementation 'com.google.crypto.tink:tink:1.7.0'
 }
 
+kotlin {
+    explicitApi()
+}
+
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {

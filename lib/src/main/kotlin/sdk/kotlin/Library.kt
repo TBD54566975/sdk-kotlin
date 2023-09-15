@@ -15,26 +15,28 @@ public class DIDKey {
     public companion object {
         public fun generateEd25519(): Pair<OctetKeyPair, String> {
             val jwk = OctetKeyPairGenerator(Curve.Ed25519)
-                .keyID("123")
+//                .keyID("123")
                 .generate()
             val publicJWK = jwk.toPublicJWK()
 
+            val methodSpecId: String = Multibase.encode(
+                Multibase.Base.Base58BTC,
+                MulticodecEncoder.encode(Multicodec.ED25519_PUB, publicJWK.decodedX)
+            )
+
             return Pair(
                 jwk,
-                "did:key:" + Multibase.encode(
-                    Multibase.Base.Base58BTC,
-                    MulticodecEncoder.encode(Multicodec.ED25519_PUB, publicJWK.decodedX)
-                )
+                "did:key:" + methodSpecId
             )
         }
     }
 }
 
 public data class SignOptions(
-    val kid: String,
-    val issuerDid: String,
-    val subjectDid: String,
-    val signerPrivateKey: OctetKeyPair,
+    var kid: String,
+    var issuerDid: String,
+    var subjectDid: String,
+    var signerPrivateKey: OctetKeyPair,
 )
 
 // TODO: Implement CredentialSchema,
@@ -48,6 +50,12 @@ public data class CreateVcOptions(
 public data class CreateVpOptions(
     val presentationDefinition: PresentationDefinitionV2,
     val verifiableCredentialJwts: List<String>,
+)
+
+public data class DecodedVcJwt(
+    val header: Any,
+    val payload: Any,
+    val signature: String
 )
 
 public typealias VcJwt = String
@@ -70,8 +78,6 @@ public class VerifiableCredential {
 
             val vc: VerifiableCredentialType = verifiableCredential ?: VerifiableCredentialType.builder()
                 .id(URI.create(UUID.randomUUID().toString()))
-                .context(URI.create("https://www.w3.org/2018/credentials/v1"))
-                .type("VerifiableCredential")
                 .credentialSubject(createVcOptions!!.credentialSubject)
                 .issuer(URI.create(createVcOptions.issuer))
                 .issuanceDate(Date())
@@ -81,17 +87,36 @@ public class VerifiableCredential {
                 }
                 .build()
 
-            // TODO: Implement: validatePayload(vc)
-            return ToJwtConverter.toJwtVerifiableCredential(vc).sign_Ed25519_EdDSA(signOptions.signerPrivateKey)
+            this.validatePayload(vc)
+
+            // TODO: This removes issuanceDate which is required https://www.w3.org/TR/vc-data-model/#issuance-date
+            return ToJwtConverter.toJwtVerifiableCredential(vc).sign_Ed25519_EdDSA(signOptions.signerPrivateKey, signOptions.kid, false)
         }
 
+        @Throws(Exception::class)
+        public fun validatePayload(vc: VerifiableCredentialType) {
+            Validation.validate(vc)
+        }
+        @Throws(Exception::class)
         public fun verify(publicKey: OctetKeyPair, vcJWT: String): Boolean {
+            require(!publicKey.isPrivate)
+            require(vcJWT.isNotEmpty())
+            // TODO: Have did resolution verification
             return JwtVerifiableCredential.fromCompactSerialization(vcJWT).verify_Ed25519_EdDSA(publicKey)
+        }
+
+        public fun decode(vcJWT: VcJwt): DecodedVcJwt {
+            val (encodedHeader, encodedPayload, encodedSignature) = vcJWT.split('.')
+
+            return DecodedVcJwt(
+                header = String(Base64.getDecoder().decode(encodedHeader)),
+                payload = String(Base64.getDecoder().decode(encodedPayload)),
+                signature = encodedSignature
+            )
         }
     }
 }
 
-// TODO: Implement this
 public class VerifiablePresentation {
     public companion object {
         public fun create(signOptions: SignOptions, createVpOptions: CreateVpOptions?): String? {

@@ -1,6 +1,8 @@
 package sdk.kotlin
 
+import com.danubetech.verifiablecredentials.jwt.JwtJwtVerifiablePresentation
 import com.danubetech.verifiablecredentials.jwt.JwtVerifiableCredential
+import com.danubetech.verifiablecredentials.jwt.JwtVerifiablePresentation
 import com.danubetech.verifiablecredentials.jwt.ToJwtConverter
 import com.identityfoundry.ddi.protocol.multicodec.Multicodec
 import com.identityfoundry.ddi.protocol.multicodec.MulticodecEncoder
@@ -8,6 +10,7 @@ import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.OctetKeyPair
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator
 import io.ipfs.multibase.Multibase
+import java.lang.Error
 import java.net.URI
 import java.util.*
 
@@ -48,8 +51,11 @@ public data class CreateVcOptions(
 )
 
 public data class CreateVpOptions(
-    val presentationDefinition: PresentationDefinitionV2,
-    val verifiableCredentialJwts: List<String>,
+    // TODO: Add this
+//    val presentationDefinition: PresentationDefinitionV2,
+//    val verifiableCredentialJwts: List<String>,
+    // TODO: remove this for verifiableCredentialJwts instead
+    val verifiableCredentials: List<VerifiableCredentialType>,
 )
 
 public data class DecodedVcJwt(
@@ -59,6 +65,7 @@ public data class DecodedVcJwt(
 )
 
 public typealias VcJwt = String
+public typealias VpJwt = String
 
 public class VerifiableCredential {
     public companion object {
@@ -119,19 +126,21 @@ public class VerifiableCredential {
 
 public class VerifiablePresentation {
     public companion object {
-        public fun create(signOptions: SignOptions, createVpOptions: CreateVpOptions?): String? {
-            if (createVpOptions == null) {
-                val vp: com.danubetech.verifiablecredentials.VerifiablePresentation =
-                    com.danubetech.verifiablecredentials.VerifiablePresentation.builder().build()
-                return ToJwtConverter.toJwtVerifiablePresentation(vp).sign_Ed25519_EdDSA(signOptions.signerPrivateKey)
-            }
-            throw NotImplementedError("create does not support createVpOptions")
+        public fun create(signOptions: SignOptions, createVpOptions: CreateVpOptions): VpJwt {
+
+            // TODO change to be more than one VC
+            val vp: VerifiablePresentationType = VerifiablePresentationType.builder()
+                .verifiableCredential(createVpOptions.verifiableCredentials[0])
+                .build();
+
+            return ToJwtConverter.toJwtVerifiablePresentation(vp).sign_Ed25519_EdDSA(signOptions.signerPrivateKey)
         }
 
-        public fun verify(publicKey: OctetKeyPair, vcJWT: String): Boolean {
+        public fun verify(publicKey: OctetKeyPair, vpJWT: String): Boolean {
             require(!publicKey.isPrivate)
-            require(vcJWT.isNotEmpty())
-            throw NotImplementedError("verify is not implemented yet")
+            require(vpJWT.isNotEmpty())
+            // TODO: Have did resolution verification
+            return JwtVerifiablePresentation.fromCompactSerialization(vpJWT).verify_Ed25519_EdDSA(publicKey)
         }
     }
 }

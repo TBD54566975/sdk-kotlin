@@ -2,6 +2,7 @@ package sdk.kotlin
 
 public typealias CredentialSubject = com.danubetech.verifiablecredentials.CredentialSubject
 public typealias VerifiableCredentialType = com.danubetech.verifiablecredentials.VerifiableCredential
+public typealias VerifiablePresentationType = com.danubetech.verifiablecredentials.VerifiablePresentation
 public typealias CredentialStatus = com.danubetech.verifiablecredentials.credentialstatus.CredentialStatus
 
 // Object as defined in https://identity.foundation/presentation-exchange/spec/v2.0.0/#presentation-definition

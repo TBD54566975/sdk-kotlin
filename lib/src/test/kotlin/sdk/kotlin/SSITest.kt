@@ -74,7 +74,7 @@ class SSITest {
     }
 
     @Test
-    fun `creates a valid VC JWT with valid VC`() {
+    fun `creates a valid VC JWT with valid VC builder`() {
         val credentialSubject = CredentialSubject.builder()
             .id(URI.create(did))
             .claims(mutableMapOf<String, Any>().apply { this["firstName"] = "Bobby" })
@@ -89,5 +89,24 @@ class SSITest {
 
         val vcJwt: VcJwt = VerifiableCredential.create(signOptions, null, vc)
         assertTrue(VerifiableCredential.verify(signOptions.signerPrivateKey.toPublicJWK(), vcJwt))
+    }
+
+    @Test
+    fun `creates a valid VP JWT with valid VC`() {
+        val credentialSubject = CredentialSubject.builder()
+            .id(URI.create(did))
+            .claims(mutableMapOf<String, Any>().apply { this["firstName"] = "Bobby" })
+            .build()
+
+        val vc:VerifiableCredentialType = VerifiableCredentialType.builder()
+            .id(URI.create(UUID.randomUUID().toString()))
+            .credentialSubject(credentialSubject)
+            .issuer(URI.create(did))
+            .issuanceDate(Date())
+            .build();
+
+        val createVpOptions = CreateVpOptions(arrayListOf(vc))
+        val vpJwt: VpJwt = VerifiablePresentation.create(signOptions, createVpOptions)
+        assertTrue(VerifiablePresentation.verify(signOptions.signerPrivateKey.toPublicJWK(), vpJwt))
     }
 }

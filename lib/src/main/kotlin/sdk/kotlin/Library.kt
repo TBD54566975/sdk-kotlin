@@ -10,7 +10,6 @@ import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jose.jwk.OctetKeyPair
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator
 import com.nimbusds.jose.util.Base64URL
-import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import foundation.identity.did.DID
 import foundation.identity.did.DIDDocument
@@ -186,7 +185,7 @@ public class VerifiablePresentation {
             val vp: VerifiablePresentationType = VerifiablePresentationType.builder()
                 .verifiableCredential(createVpOptions.verifiableCredentials[0])
                 .holder(URI.create(createVpOptions.holder))
-                .build();
+                .build()
 
             return ToJwtConverter.toJwtVerifiablePresentation(vp)
                 .sign_Ed25519_EdDSA(signOptions.signerPrivateKey.toOctetKeyPair(), signOptions.kid, false)

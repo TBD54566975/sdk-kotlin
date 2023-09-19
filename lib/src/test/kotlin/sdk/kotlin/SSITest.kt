@@ -93,7 +93,7 @@ class SSITest {
             .credentialSubject(credentialSubject)
             .issuer(URI.create(did))
             .issuanceDate(Date())
-            .build();
+            .build()
 
         val vcJwt: VcJwt = VerifiableCredential.create(signOptions, null, vc)
         assertTrue(VerifiableCredential.verify(vcJwt, SimpleResolver(didDocument)))
@@ -111,7 +111,7 @@ class SSITest {
             .credentialSubject(credentialSubject)
             .issuer(URI.create(did))
             .issuanceDate(Date())
-            .build();
+            .build()
 
         val createVpOptions = CreateVpOptions(arrayListOf(vc), did)
         val vpJwt: VpJwt = VerifiablePresentation.create(signOptions, createVpOptions)

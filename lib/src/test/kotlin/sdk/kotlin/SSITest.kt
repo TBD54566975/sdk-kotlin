@@ -125,7 +125,7 @@ class SimpleResolver(var didDocument: DIDDocument) : DIDResolver {
     }
 
     override fun resolveRepresentation(p0: String?, p1: MutableMap<String, Any>?): ResolveRepresentationResult {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
 }

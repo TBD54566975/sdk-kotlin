@@ -1,22 +1,29 @@
 package sdk.kotlin
 
+import com.nimbusds.jose.jwk.JWK
 import java.net.URI
 import java.util.Base64
 import kotlin.test.*
-import com.nimbusds.jose.jwk.OctetKeyPair
+import foundation.identity.did.DIDDocument
 import org.junit.jupiter.api.BeforeEach
+import uniresolver.result.ResolveDataModelResult
+import uniresolver.result.ResolveRepresentationResult
+import uniresolver.w3c.DIDResolver
 import java.util.Date
 import java.util.UUID
 
 class SSITest {
 
     lateinit var signOptions: SignOptions
-    lateinit var didKey: Pair<OctetKeyPair, String>
+    lateinit var didKey: Triple<JWK, String, DIDDocument>
     lateinit var did: String
+    lateinit var didDocument: DIDDocument
+
     @BeforeEach
     fun setup() {
         didKey = DIDKey.generateEd25519()
         did = didKey.second
+        didDocument = didKey.third
 
         signOptions = SignOptions(
             kid = "#" + did.split(":")[2],
@@ -25,6 +32,7 @@ class SSITest {
             signerPrivateKey = didKey.first
         )
     }
+
     @Test
     fun generateReturnsValidKey() {
         assertContains(DIDKey.generateEd25519().second, "did:key:z6Mk")
@@ -69,7 +77,7 @@ class SSITest {
         assertTrue { payload.contains("\"sub\":\"") }
 
         assertTrue {
-            VerifiableCredential.verify(signOptions.signerPrivateKey.toPublicJWK(), vcJwt)
+            VerifiableCredential.verify(vcJwt, SimpleResolver(didDocument))
         }
     }
 
@@ -88,7 +96,7 @@ class SSITest {
             .build();
 
         val vcJwt: VcJwt = VerifiableCredential.create(signOptions, null, vc)
-        assertTrue(VerifiableCredential.verify(signOptions.signerPrivateKey.toPublicJWK(), vcJwt))
+        assertTrue(VerifiableCredential.verify(vcJwt, SimpleResolver(didDocument)))
     }
 
     @Test
@@ -105,8 +113,19 @@ class SSITest {
             .issuanceDate(Date())
             .build();
 
-        val createVpOptions = CreateVpOptions(arrayListOf(vc))
+        val createVpOptions = CreateVpOptions(arrayListOf(vc), did)
         val vpJwt: VpJwt = VerifiablePresentation.create(signOptions, createVpOptions)
-        assertTrue(VerifiablePresentation.verify(signOptions.signerPrivateKey.toPublicJWK(), vpJwt))
+        assertTrue(VerifiablePresentation.verify(vpJwt, SimpleResolver(didDocument)))
     }
+}
+
+class SimpleResolver(var didDocument: DIDDocument) : DIDResolver {
+    override fun resolve(p0: String?, p1: MutableMap<String, Any>?): ResolveDataModelResult {
+        return ResolveDataModelResult.build(null, this.didDocument, null)
+    }
+
+    override fun resolveRepresentation(p0: String?, p1: MutableMap<String, Any>?): ResolveRepresentationResult {
+        TODO("Not yet implemented")
+    }
+
 }

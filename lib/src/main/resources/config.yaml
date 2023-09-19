@@ -1,0 +1,2 @@
+generatorComment: This file was generated from tbdex-protocol/json-schemas. You can regenerate by running `./gradlew generate`
+packageName: tbdex.model

@@ -7,7 +7,7 @@
  * It is not advisable to modify generated code as any modifications will be lost
  * when the generation process is re-run.
  *
- * This file was generated from tbdex-protocol/json-schemas. Run gradle generate
+ * This file was generated from tbdex-protocol/json-schemas. You can regenerate by running `./gradlew generate`
  */
 package tbdex.model
 

@@ -1,0 +1,3 @@
+[submodule "tbdex-protocol"]
+	path = tbdex-protocol
+	url = git@github.com:TBD54566975/tbdex-protocol.git
